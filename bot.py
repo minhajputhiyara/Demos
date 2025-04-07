@@ -1,14 +1,15 @@
 import discord
-import openai
+from openai import AsyncOpenAI
 import os
 from dotenv import load_dotenv
-from copilotkit_faq import faq_dict 
+from copilotkit_faq import faq_dict
 
 # Load environment variables from .env
 load_dotenv()
 
+aclient = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 # Get keys from environment
-openai.api_key = os.getenv("OPENAI_API_KEY")
 DISCORD_TOKEN = os.getenv("DISCORD_BOT_TOKEN")
 
 intents = discord.Intents.default()
@@ -16,7 +17,7 @@ intents.message_content = True
 client = discord.Client(intents=intents)
 
 # Forum Channel ID
-allowed_forum_id = 1357613585613852863
+allowed_forum_id = 1357411011132395650
 
 # Build FAQ context string from the imported dictionary
 context_string = faq_dict
@@ -48,20 +49,21 @@ async def on_message(message):
 
         try:
             # Use the new OpenAI API method
-            response = await openai.ChatCompletion.acreate(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "You are a helpful developer assistant."},
-                    {"role": "user", "content": build_prompt(user_question)}
-                ],
-                temperature=0.3
-            )
+            print("\n\nuser question : ", user_question)
+            response = await aclient.chat.completions.create(model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a helpful developer assistant."},
+                {"role": "user", "content": build_prompt(user_question)}
+            ],
+            temperature=0.3)
+            print("llm response : ", response.choices)
 
-            answer = response['choices'][0]['message']['content']
+            answer = response.choices[0].message.content
             await message.reply(answer)
 
         except Exception as e:
-            await message.reply(f"sorry")
+            print(f"❌ Error: {e}")
+            await message.reply(f"Hello, We are looking in to this. We will get back to you shortly.")
 
 # Run the bot using token from .env
 client.run(DISCORD_TOKEN)
