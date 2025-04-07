@@ -1,6 +1,7 @@
 import discord
 from openai import AsyncOpenAI
 import os
+import asyncio
 from dotenv import load_dotenv
 from copilotkit_faq import faq_dict
 
@@ -18,7 +19,7 @@ client = discord.Client(intents=intents)
 
 # Forum Channel ID
 allowed_forum_id = 1357411011132395650
-
+# allowed_forum_id = 1357613585613852863
 # Build FAQ context string from the imported dictionary
 context_string = faq_dict
 
@@ -59,6 +60,8 @@ async def on_message(message):
             print("llm response : ", response.choices)
 
             answer = response.choices[0].message.content
+            # Add a 2-second delay before replying
+            await asyncio.sleep(2)
             await message.reply(answer)
 
         except Exception as e:
